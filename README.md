@@ -35,3 +35,16 @@ streamlit run streamlit_app.py
 ```
 
 Part of my ongoing AI engineering learning journey.
+
+## 🧠 Key Engineering Decisions & Tradeoffs
+
+- **Multi-format ingestion as first-class citizens.** Separate ingestion paths for PDF, CSV, Excel, JSON, Word, and SQL sources — because real enterprise knowledge is never one clean format. This is the data-engineering discipline most "chat-with-your-PDF" demos skip.
+- **`RecursiveCharacterTextSplitter`, chunk size 500 / overlap 50.** Small chunks favor retrieval precision over broad context; the 50-token overlap preserves continuity across boundaries. Tradeoff: more chunks means more embedding cost, accepted here for answer precision.
+- **FAISS for the vector store.** In-memory, zero-infra, fast to iterate locally. Tradeoff: not persistent or distributed — a deliberate choice for a single-node app; production scale would swap to a managed vector DB (e.g. pgvector / Pinecone).
+- **LangGraph state machine (retrieve → generate) with a ReAct node.** An explicit graph makes the flow inspectable and extensible versus a monolithic chain; the ReAct node allows tool-augmented reasoning when a straight lookup isn't enough.
+- **Retriever `k=4`.** Balances recall against context-window cost and answer focus.
+- **GPT-4o + OpenAI embeddings, isolated in `config.py`.** Model choice is centralized so swapping providers is a one-line change.
+
+## 📊 Evaluation & Results
+
+Evaluation is currently manual and qualitative. A quantitative harness — retrieval hit-rate (relevant chunk in top-*k*) plus answer groundedness on a labeled question set — is the next planned addition, following the reusable `llm-eval-harness` pattern in my portfolio.
